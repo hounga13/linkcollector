@@ -64,6 +64,16 @@ def crawl_coupang_deals():
             print(f"베스트상품 크롤링 오류: {e}")
             
         browser.close()
+
+    # 봇 탐지 에러 (Access Denied 등) 발생 시 UI 테스트를 위한 더미 데이터 반환
+    if not results:
+        print("Coupang 보안 정책(봇 탐지)으로 인해 크롤링이 차단되었습니다! 시스템 테스트용 더미 데이터를 반환합니다.")
+        results = [
+            {"name": "[테스트] 삼성전자 4K UHD 스마트 TV 75인치", "price": 1250000, "original_link": "https://www.coupang.com/", "image_url": "https://thumbnail8.coupangcdn.com/thumbnails/remote/230x230ex/image/retail/images/2023/07/26/17/9/75f3a093-6c70-4f51-b847-f5da1fe3fa9b.jpg", "category": "가전", "deal_type": "HOT_DEAL", "is_trending": True},
+            {"name": "[테스트] 애플 2023 맥북 프로 14 M3", "price": 2150000, "original_link": "https://www.coupang.com/", "image_url": "https://thumbnail10.coupangcdn.com/thumbnails/remote/230x230ex/image/vendor_inventory/58af/ebdb19ad43e2e5ec4682ba7acc5bafa28fdef7ca9fcfaeef5476a8b7dd5b.jpg", "category": "디지털", "deal_type": "NORMAL", "is_trending": True},
+            {"name": "[테스트] 크리넥스 3겹 데코앤소프트 화장지 30롤", "price": 18900, "original_link": "https://www.coupang.com/", "image_url": "https://thumbnail6.coupangcdn.com/thumbnails/remote/230x230ex/image/retail/images/2020/09/23/15/3/ec2dfbf0-7389-4b68-ab7a-0a7ccbcc38f6.jpg", "category": "생활용품", "deal_type": "HOT_DEAL", "is_trending": True}
+        ]
+        
     return results
 
 if __name__ == "__main__":

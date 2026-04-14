@@ -23,7 +23,29 @@
             }
         }
 
-        // 수동 복사기 템플릿 생성기능
+        async function saveManualLink(productId) {
+            const inputVal = document.getElementById("link-" + productId).value.trim();
+            if(!inputVal) {
+                alert("링크를 입력해주세요!");
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('affiliate_link', inputVal);
+            
+            try {
+                const res = await fetch(`/update_link/${productId}`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const json = await res.json();
+                alert(json.message);
+                window.location.reload();
+            } catch(e) {
+                alert(e);
+            }
+        }
+
         function copyManualText(name, price, dealType, link) {
             let prefix = dealType === 'HOT_DEAL' ? '🔥[긴급핫딜] 이웃분들 지금 당장 보세요!' : '✨[추천상품] 이웃분들 이거 가성비 좋네요~';
             let txt = `${prefix}\n\n[ ${name} ]\n💰 최저가: ${price}원\n\n👉 바로 구경가기:\n${link}\n\n*이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.`;
@@ -36,47 +58,45 @@
         }
     </script>
 </head>
-<body class="bg-gray-100 text-gray-900 font-sans">
+<body class="bg-gray-50 text-gray-900 font-sans">
     <div class="container mx-auto p-6 max-w-7xl">
         <div class="flex justify-between items-center mb-6">
-            <h1 class="text-3xl font-bold">🚀 100% 무인화 제휴 마케팅 봇 관리자</h1>
-            <button id="manual-btn" onclick="runManualJob()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded shadow">
+            <h1 class="text-3xl font-extrabold text-gray-800 tracking-tight">🚀 무인화 봇 관제 대시보드</h1>
+            <button id="manual-btn" onclick="runManualJob()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow transition-colors duration-200">
                 수동 크롤링 즉시 실행
             </button>
         </div>
 
         <div class="grid grid-cols-1 mb-8 gap-6">
-            <div class="bg-white rounded shadow p-4">
+            <div class="bg-white rounded-xl shadow p-5 border border-gray-100">
                 <h2 class="text-xl font-semibold mb-4 text-gray-800">최근 대기열 & 포스팅 상태 (Queue)</h2>
                 <div class="overflow-x-auto max-h-60 overflow-y-auto">
                     <table class="w-full text-sm text-left text-gray-500">
-                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 sticky top-0">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 sticky top-0 shadow-sm">
                             <tr>
-                                <th class="px-4 py-2">ID</th>
-                                <th class="px-4 py-2">DB ID</th>
-                                <th class="px-4 py-2">타겟 채널</th>
-                                <th class="px-4 py-2 text-center">상태</th>
-                                <th class="px-4 py-2">포스팅 URL</th>
-                                <th class="px-4 py-2">발행일</th>
+                                <th class="px-4 py-3">ID</th>
+                                <th class="px-4 py-3">DB ID</th>
+                                <th class="px-4 py-3">타겟 채널</th>
+                                <th class="px-4 py-3 text-center">상태</th>
+                                <th class="px-4 py-3">포스팅 시각</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for post in posts %}
-                            <tr class="border-b">
-                                <td class="px-4 py-2">{{ post.id }}</td>
-                                <td class="px-4 py-2 text-blue-500 font-semibold">{{ post.product_id }}</td>
-                                <td class="px-4 py-2 font-medium text-gray-700">{{ post.platform }}</td>
+                            <tr class="border-b last:border-0 hover:bg-gray-50">
+                                <td class="px-4 py-2 text-gray-400">{{ post.id }}</td>
+                                <td class="px-4 py-2 text-blue-500 font-semibold">🔗 {{ post.product_id }}</td>
+                                <td class="px-4 py-2 font-bold text-gray-700">{{ post.platform }}</td>
                                 <td class="px-4 py-2 text-center">
                                     {% if post.post_status == 'SUCCESS' %}
-                                        <span class="bg-green-100 text-green-800 text-xs font-medium px-2 py-0.5 rounded">완료</span>
+                                        <span class="bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded">성공</span>
                                     {% elif post.post_status == 'FAILED' %}
-                                        <span class="bg-red-100 text-red-800 text-xs font-medium px-2 py-0.5 rounded">실패</span>
+                                        <span class="bg-red-100 text-red-800 text-xs font-bold px-2 py-1 rounded">에러</span>
                                     {% else %}
-                                        <span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-0.5 rounded animate-pulse">발행 대기중</span>
+                                        <span class="bg-yellow-100 text-yellow-800 text-xs font-bold px-2 py-1 rounded animate-pulse">대기중</span>
                                     {% endif %}
                                 </td>
-                                <td class="px-4 py-2">{{ post.post_url or '-' }}</td>
-                                <td class="px-4 py-2">{{ post.posted_at or '-' }}</td>
+                                <td class="px-4 py-2 text-gray-400">{{ post.posted_at or '-' }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -85,43 +105,62 @@
             </div>
         </div>
 
-        <div class="bg-white rounded shadow p-4">
-            <h2 class="text-xl font-semibold mb-4 text-gray-800">로컬 수집된 상품 목록 (Hot & Best)</h2>
+        <div class="bg-white rounded-xl shadow p-5 border border-gray-100">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-semibold text-gray-800">단가/핫딜 상품 모음 (수동 링크 입력기 겸용)</h2>
+                <span class="text-xs text-gray-500 bg-yellow-100 px-3 py-1 rounded-full">API가 없을 땐 원본URL로 파트너스에서 변환 후 붙여넣으세요!</span>
+            </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-sm text-left text-gray-500">
-                    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 shadow-sm">
                         <tr>
-                            <th class="px-4 py-2 text-center">유형</th>
-                            <th class="px-4 py-2 text-center">미리보기</th>
-                            <th class="px-4 py-2">상품명</th>
-                            <th class="px-4 py-2">가격</th>
-                            <th class="px-4 py-2 text-center">수동 보조기 (당근 등)</th>
+                            <th class="px-4 py-3 text-center">유형</th>
+                            <th class="px-4 py-3 text-center">미리보기</th>
+                            <th class="px-4 py-3">상품명</th>
+                            <th class="px-4 py-3">조건</th>
+                            <th class="px-4 py-3 text-center w-64">제휴 링크 관리 & 보조기</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for product in products %}
-                        <tr class="border-b hover:bg-gray-50">
-                            <td class="px-4 py-2 text-center">
+                        <tr class="border-b last:border-0 hover:bg-gray-50 transition-colors">
+                            <td class="px-4 py-3 text-center align-middle">
                                 {% if product.deal_type == 'HOT_DEAL' %}
-                                    <span class="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded drop-shadow">HOT DEAL</span>
+                                    <span class="bg-red-500 text-white text-xs font-extrabold px-3 py-1 rounded-full drop-shadow">HOT</span>
                                 {% else %}
-                                    <span class="bg-gray-400 text-white text-xs font-bold px-2 py-1 rounded">NORMAL</span>
+                                    <span class="bg-gray-400 text-white text-xs font-bold px-3 py-1 rounded-full">NOR</span>
                                 {% endif %}
                             </td>
-                            <td class="px-4 py-2 text-center">
-                                <img src="{{ product.image_url }}" alt="thumb" class="w-12 h-12 rounded object-cover shadow-sm mx-auto">
+                            <td class="px-4 py-3 text-center align-middle">
+                                <img src="{{ product.image_url }}" alt="thumb" class="w-14 h-14 rounded object-cover shadow-sm mx-auto">
                             </td>
-                            <td class="px-4 py-2 font-medium text-gray-900 max-w-sm truncate" title="{{ product.name }}">{{ product.name }}</td>
-                            <td class="px-4 py-2 font-semibold text-blue-600">{{ "{:,}".format(product.price) }}원</td>
-                            <td class="px-4 py-2 text-center">
+                            <td class="px-4 py-3 font-medium text-gray-900 max-w-sm align-middle">
+                                <div class="line-clamp-2" title="{{ product.name }}">{{ product.name }}</div>
+                            </td>
+                            <td class="px-4 py-3 font-bold text-red-600 align-middle text-lg">{{ "{:,}".format(product.price) }}원</td>
+                            <td class="px-4 py-3 align-middle bg-blue-50/30">
                                 {% if product.affiliate_link %}
-                                    <button onclick="copyManualText('{{ product.name | replace("'", "\\'") }}', '{{ '{:,}'.format(product.price) }}', '{{ product.deal_type }}', '{{ product.affiliate_link }}')" 
-                                            class="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 text-xs font-bold py-2 px-3 rounded inline-flex items-center transition duration-150">
-                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
-                                        홍보문구 복사
-                                    </button>
+                                    <div class="flex flex-col gap-2">
+                                        <div class="text-xs text-emerald-600 font-bold bg-emerald-50 p-1 rounded break-all shadow-inner border border-emerald-100">
+                                            ✅ 딥링크 등록 완료
+                                        </div>
+                                        <button onclick="copyManualText('{{ product.name | replace("'", "\\'") }}', '{{ '{:,}'.format(product.price) }}', '{{ product.deal_type }}', '{{ product.affiliate_link }}')" 
+                                                class="bg-white text-indigo-600 hover:bg-indigo-50 border border-indigo-200 text-xs font-bold py-2 px-3 rounded-lg shadow-sm transition-all flex items-center justify-center">
+                                            ✍️ 당근용 홍보문구 복사
+                                        </button>
+                                    </div>
                                 {% else %}
-                                    <span class="text-xs text-gray-400">발급 전</span>
+                                    <div class="flex flex-col gap-2">
+                                        <a href="{{ product.original_link }}" target="_blank" class="text-center text-blue-600 bg-blue-50 hover:bg-blue-100 text-xs font-bold py-1 px-2 rounded border border-blue-200 transform transition hover:-translate-y-0.5">
+                                            1. 원본 보기 (링크 따기👉)
+                                        </a>
+                                        <div class="flex gap-1">
+                                            <input type="text" id="link-{{ product.id }}" placeholder="ex) https://link.coupang.com..." class="border rounded px-2 py-1 text-xs w-full focus:ring-2 focus:ring-blue-500 shadow-inner outline-none">
+                                            <button onclick="saveManualLink({{ product.id }})" class="bg-green-500 hover:bg-green-600 text-white text-xs font-bold py-1 px-3 rounded shadow-sm whitespace-nowrap">
+                                                저장
+                                            </button>
+                                        </div>
+                                    </div>
                                 {% endif %}
                             </td>
                         </tr>
@@ -130,7 +169,6 @@
                 </table>
             </div>
         </div>
-
     </div>
 </body>
 </html>

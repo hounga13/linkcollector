@@ -34,7 +34,7 @@ date: {datetime.datetime.now().isoformat()}
     with open(filepath, "w", encoding="utf-8") as f:
         f.write(content)
         
-    # git 자동 푸시 스크립트 실행 (실 구동시 활용)
-    # os.system(f"cd {REPO_PATH} && git add . && git commit -m 'Auto Post: {safe_title}' && git push")
+    # git 자동 푸시 스크립트 실행
+    os.system(f"cd {REPO_PATH} && git add . && git commit -m 'Auto Post: {safe_title}' && git push -u origin main")
     print(f"[GitHub Pages] 포스팅 문서 생성 성공: {filepath}")
     return True

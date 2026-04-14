@@ -1,10 +1,10 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Form
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from fastapi import Depends
 import models
 from database import engine, get_db
-from scheduler import start_scheduler, job_crawl_and_post
+from scheduler import start_scheduler, job_crawl_deals
 
 # DB 테이블 생성
 models.Base.metadata.create_all(bind=engine)
@@ -29,7 +29,13 @@ def read_root(request: Request, db: Session = Depends(get_db)):
 
 @app.post("/manual_run")
 def manual_run():
-    # 관리자가 버튼을 통해 수동으로 즉시 실행되게 하는 API
-    # 이 작업은 시간이 조금 걸릴 수 있으므로, 실제 운영시에는 BackgroundTasks를 사용하는 것이 좋습니다.
-    job_crawl_and_post()
-    return {"message": "수동 작업이 실행되었습니다. 서버 콘솔을 확인하세요."}
+    job_crawl_deals()
+    return {"message": "수동 크롤링이 완료되었습니다! 핫딜/베스트 상품이 수집되었습니다."}
+
+@app.post("/update_link/{product_id}")
+def update_link(product_id: int, affiliate_link: str = Form(...), db: Session = Depends(get_db)):
+    product = db.query(models.Product).filter(models.Product.id == product_id).first()
+    if product:
+        product.affiliate_link = affiliate_link
+        db.commit()
+    return {"message": "제휴 링크가 수동으로 저장되었습니다. 이제 스케줄러가 포스팅을 시작합니다!"}
