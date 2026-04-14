@@ -34,6 +34,12 @@ date: {datetime.datetime.now().isoformat()}
     with open(filepath, "w", encoding="utf-8") as f:
         f.write(content)
         
+    # index.md 에 링크 한 줄 추가
+    index_path = os.path.join(REPO_PATH, "index.md")
+    if os.path.exists(index_path):
+        with open(index_path, "a", encoding="utf-8") as f:
+            f.write(f"\n* 👉 [{date_str} {hot_tag} {product.name}](./{filename.replace('.md', '')})")
+
     # git 자동 푸시 스크립트 실행
     os.system(f"cd {REPO_PATH} && git add . && git commit -m 'Auto Post: {safe_title}' && git push -u origin main")
     print(f"[GitHub Pages] 포스팅 문서 생성 성공: {filepath}")
