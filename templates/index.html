@@ -46,6 +46,32 @@
             }
         }
 
+        async function submitManualProduct() {
+            const name = document.getElementById("m_name").value.trim();
+            const price = document.getElementById("m_price").value.trim();
+            const link = document.getElementById("m_link").value.trim();
+            const deal_type = document.getElementById("m_dealtype").value;
+            
+            if (!name || !price || !link) {
+                alert("상품명, 가격, 링크를 모두 입력해주세요!");
+                return;
+            }
+            const fd = new FormData();
+            fd.append("name", name);
+            fd.append("price", price);
+            fd.append("affiliate_link", link);
+            fd.append("deal_type", deal_type);
+            
+            try {
+                const res = await fetch("/add_manual_product", {method: 'POST', body: fd});
+                const json = await res.json();
+                alert(json.message);
+                window.location.reload();
+            } catch(e) {
+                alert(e);
+            }
+        }
+
         function copyManualText(name, price, dealType, link) {
             let prefix = dealType === 'HOT_DEAL' ? '🔥[긴급핫딜] 이웃분들 지금 당장 보세요!' : '✨[추천상품] 이웃분들 이거 가성비 좋네요~';
             let txt = `${prefix}\n\n[ ${name} ]\n💰 최저가: ${price}원\n\n👉 바로 구경가기:\n${link}\n\n*이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.`;
@@ -64,6 +90,23 @@
             <h1 class="text-3xl font-extrabold text-gray-800 tracking-tight">🚀 무인화 봇 관제 대시보드</h1>
             <button id="manual-btn" onclick="runManualJob()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow transition-colors duration-200">
                 수동 크롤링 즉시 실행
+            </button>
+        </div>
+
+        <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-6 mb-8 flex flex-col gap-4 shadow-sm">
+            <h2 class="text-xl font-extrabold text-indigo-900 border-b border-indigo-200 pb-2">➕ 수동 특가 상품 등록기 (초간편 직행 연동)</h2>
+            <p class="text-sm text-indigo-700 font-medium">크롤러 없이 내가 직접 폰/웹에서 파트너스 변환해 가져온 꿀템을 포스팅 큐에 1초 만에 강제 주입합니다.</p>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-2">
+                <input type="text" id="m_name" placeholder="상품명 (예: 애플 에어팟 맥스)" class="px-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                <input type="number" id="m_price" placeholder="최저가 (숫자만, 예: 350000)" class="px-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                <input type="text" id="m_link" placeholder="제휴 단축 링크 (https://link.coupang.com/...)" class="px-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                <select id="m_dealtype" class="px-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white">
+                    <option value="HOT_DEAL" class="text-red-600 font-bold">🔥 초특가 핫딜</option>
+                    <option value="NORMAL" class="font-medium text-gray-700">✨ 일반 추천상품</option>
+                </select>
+            </div>
+            <button onclick="submitManualProduct()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-lg font-bold py-3 mt-2 rounded-lg shadow-md transition-all transform hover:-translate-y-0.5">
+                상품 저장 및 포스팅 대기열 즉시 발송 🚀
             </button>
         </div>
 
